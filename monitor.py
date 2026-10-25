@@ -115,10 +115,28 @@ def read_status(page):
     return 'UNKNOWN'
 
 
+def dismiss_cookie_banner(page):
+    """Accept only technical cookies using the label observed on the VCA page."""
+    candidates = [
+        page.get_by_text(re.compile(r'^\s*ALLOW\s+TECHNICAL\s+COOKIES\s*$', re.I)),
+        page.locator('#onetrust-reject-all-handler'),
+    ]
+    for matches in candidates:
+        for index in range(matches.count()):
+            button = matches.nth(index)
+            if button.is_visible():
+                button.click(timeout=5000)
+                button.wait_for(state='hidden', timeout=10000)
+                page.wait_for_timeout(500)
+                print('Cookie banner dismissed', flush=True)
+                return
+
+
 def wait_status(page, seconds=35):
     # Give the hydrated page a chance to change its initial out-of-stock placeholder.
     deadline = time.monotonic() + seconds
     while True:
+        dismiss_cookie_banner(page)
         status = read_status(page)
         if status == 'IN_STOCK' or time.monotonic() >= deadline:
             return status
@@ -155,10 +173,6 @@ def check_product(dry_run=False):
                     raise RuntimeError('Product HTTP error')
                 # Do not use networkidle: analytics connections may never finish.
                 page.wait_for_timeout(12000)
-                # Only a known cookie control is clicked; never shopping controls.
-                cookie = page.locator('#onetrust-reject-all-handler')
-                if cookie.count() and cookie.first.is_visible():
-                    cookie.first.click(timeout=3000)
                 status = wait_status(page)
                 save_evidence(page, status)
             except Exception as exc:
