@@ -55,7 +55,7 @@ def send_bark(test=False):
         'device_key': required('BARK_KEY'),
         'title': '【响铃测试】VCA' if test else '【补货提醒】VCA 有货',
         'body': '测试警报，不代表有货。' if test else PRODUCT_NAME + '\nADD TO BAG 已可见，点击查看。',
-        'level': 'critical', 'call': '1', 'volume': '10', 'sound': 'alarm',
+        'level': 'critical', 'call': '1', 'volume': '5', 'sound': 'alarm',
         'group': 'VCA-VCARD35600', 'url': PRODUCT_URL,
     }
     request = Request('https://api.day.app/push',
